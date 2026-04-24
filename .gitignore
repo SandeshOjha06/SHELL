@@ -1,1 +1,14 @@
 LOG.md
+lexer_test
+
+test_lexer.c
+
+# Binaries
+lexer_test
+
+# Local test outputs
+*.txt
+*.log
+
+# Build artifacts
+*.o
