@@ -30,7 +30,7 @@ int lexer(const char *input, Token *tokens, int max_tokens) {
             }
 
             tokens[t].type = TOKEN_PIPE;
-            tokens[t].value = '\0';
+            tokens[t].value[0] = '\0';
             t++;
             i++;
             continue;
@@ -48,7 +48,7 @@ int lexer(const char *input, Token *tokens, int max_tokens) {
             }
 
             // peek at next character
-            if (input[i +1] == '>>') {
+            if (input[i +1] == '>') {
                 tokens[t].type = TOKEN_REDIR_APPEND;
                 i += 2;
             } else {
@@ -90,14 +90,14 @@ int lexer(const char *input, Token *tokens, int max_tokens) {
 
     // end EOF Token
     tokens[t].type = TOKEN_EOF;
-    tokens.value[0] = '\0';
+    tokens[t].value[0] = '\0';
     t++;
     
     return t;
 }
 
 
-void print_tokens(Token *t, int n) {
+void print_tokens(Token *tokens, int n) {
     const char *type_names[] = {
         "WORD", "PIPE", "REDIR_IN", "REDIR_OUT", "REDIR_APPEND", "EOF"
     };
