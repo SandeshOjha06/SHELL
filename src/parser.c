@@ -25,6 +25,7 @@ Pipeline *parse(Token *tokens, int n) {
             // argv must be null terminated for execvp
             if(p->cmds[c].argc >= MAX_ARGS - 1) {
                 fprintf(stderr, "SHELL: too many arguments\n");
+                p->n = c + 1; 
                 free_pipeline(p);
                 return NULL;
             }
@@ -37,12 +38,14 @@ Pipeline *parse(Token *tokens, int n) {
             // pipe token - finish current command and start a new one
             if (p->cmds[c].argc == 0) {
                 fprintf(stderr, "SHELL: syntax error near '|'\n");
+                p->n = c; 
                 free_pipeline(p);
                 return NULL;
             }
             c++;
             if (c >= MAX_PIPE_CMDS) {
                 fprintf(stderr, "SHELL: too many pipe commands\n");
+                p->n = c; 
                 free_pipeline(p);
                 return NULL;
             }
@@ -59,6 +62,7 @@ Pipeline *parse(Token *tokens, int n) {
             t++;
             if (t >= n || tokens[t].type != TOKEN_WORD) {
                 fprintf(stderr, "SHELL: expected file name after '<'\n");
+                p->n = c + 1; 
                 free_pipeline(p);
                 return NULL;
             }
@@ -70,6 +74,7 @@ Pipeline *parse(Token *tokens, int n) {
             t++;
             if (t >= n || tokens[t].type != TOKEN_WORD) {
                 fprintf(stderr, "SHELL: expected file name after '>'\n");
+                p->n = c + 1; 
                 free_pipeline(p);
                 return NULL;
             }
@@ -82,6 +87,7 @@ Pipeline *parse(Token *tokens, int n) {
             t++;
             if (t >= n || tokens[t].type != TOKEN_WORD) {
                 fprintf(stderr, "SHELL: expected file name after '>>'\n");
+                p->n = c + 1;
                 free_pipeline(p);
                 return NULL;
             }
@@ -100,7 +106,21 @@ Pipeline *parse(Token *tokens, int n) {
         }
     }
 
-    p->n = (c == 0 && p->cmds[0].argc == 0) ? 0 : c + 1;
+    // trailing pipe: "ls |" — last command has no words
+    if (p->cmds[c].argc == 0 && c > 0) {
+        fprintf(stderr, "SHELL: syntax error: incomplete pipeline\n");
+        p->n = c;
+        free_pipeline(p);
+        return NULL;
+    }
+
+    // empty input
+    if (c == 0 && p->cmds[0].argc == 0) {
+        free(p);
+        return NULL;
+    }
+
+    p->n = c + 1;
     return p;
 }
 
